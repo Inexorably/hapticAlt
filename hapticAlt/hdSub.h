@@ -35,15 +35,15 @@ protected:
 	double m_components[3];
 
 public:
-	//Constructor.
+	//Constructors.
+	hduVector3Dd();
 	hduVector3Dd(const HDdouble x, const HDdouble y, const HDdouble z);
 
 	//TODO: Overload the assignment operator to allow assignment by array in case anyone uses that.
-	//hduVector3Dd& operator = (const hduVector3Dd& vector);
 
 	//Overload [] operator to allow [] indexing / assignment.
-	HDdouble operator [](int i) const { return m_components[i]; };
-	HDdouble& operator [](int i) { return m_components[i]; };
+	HDdouble operator[](int i) const { return m_components[i]; };
+	HDdouble& operator[](int i) { return m_components[i]; };
 
 	//Calculate the magnitude.
 	HDdouble magnitude() const;
@@ -53,6 +53,9 @@ public:
 
 	//Set all components of the vector.
 	void set(const HDdouble x, const HDdouble y, const HDdouble z);
+
+	//Print the components to console for debugging.
+	void print() const;
 };
 
 /*****************Hardware subsitutions (tracking position / veloc / accel etc)*************************/
@@ -62,9 +65,6 @@ class Tracker {
 public:
 	void start();
 	Tracker();
-
-	//Modifies the m_plane variable and changes the viewing / tracking plane.
-	void changePlane(const int plane);
 
 	//State data storage.  Would normally want member functions to safely access these, but end user will not be interacting with 
 	//the tracker object so this is not a big deal.
@@ -90,10 +90,45 @@ private:
 extern Tracker globalTracker;
 
 /************************************Non-member HD utility functions**************/
-HDdouble dotProduct(const hduVector3Dd a, const hduVector3Dd b);
-hduVector3Dd crossProduct(const hduVector3Dd a, const hduVector3Dd b);
+HDdouble dotProduct(const hduVector3Dd& a, const hduVector3Dd& b);
+hduVector3Dd crossProduct(const hduVector3Dd& a, const hduVector3Dd& b);
 void hdGetDoublev(const int key, hduVector3Dd& v);
 void hdSetDoublev(const int key, hduVector3Dd& v);
 
 /**********************************Generic utility functions**************************/
 void printState();
+
+/************************Operator overloads******************************************/
+
+//We define outside of class so that we can have bidirectional arguments.
+//For example, if we overloaded the member operators we could only have the class on the lhs, and argument on the rhs.
+	
+//Scalar + vector overloads.  Define for common types of numeric scalars.  Define in both directions.
+hduVector3Dd operator+(const hduVector3Dd& lhs, const int& rhs);
+hduVector3Dd operator+(const int& lhs, const hduVector3Dd& rhs);
+hduVector3Dd operator+(const hduVector3Dd& lhs, const HDdouble& rhs);
+hduVector3Dd operator+(const HDdouble& lhs, const hduVector3Dd& rhs);
+hduVector3Dd operator+(const hduVector3Dd& lhs, const float& rhs);
+hduVector3Dd operator+(const float& lhs, const hduVector3Dd& rhs);
+
+hduVector3Dd operator-(const hduVector3Dd& lhs, const int& rhs);
+hduVector3Dd operator-(const int& lhs, const hduVector3Dd& rhs);
+hduVector3Dd operator-(const hduVector3Dd& lhs, const HDdouble& rhs);
+hduVector3Dd operator-(const HDdouble& lhs, const hduVector3Dd& rhs);
+hduVector3Dd operator-(const hduVector3Dd& lhs, const float& rhs);
+hduVector3Dd operator-(const float& lhs, const hduVector3Dd& rhs);
+
+hduVector3Dd operator*(const hduVector3Dd& lhs, const int& rhs);
+hduVector3Dd operator*(const int& lhs, const hduVector3Dd& rhs);
+hduVector3Dd operator*(const hduVector3Dd& lhs, const HDdouble& rhs);
+hduVector3Dd operator*(const HDdouble& lhs, const hduVector3Dd& rhs);
+hduVector3Dd operator*(const hduVector3Dd& lhs, const float& rhs);
+hduVector3Dd operator*(const float& lhs, const hduVector3Dd& rhs);
+
+hduVector3Dd operator/(const hduVector3Dd& lhs, const int& rhs);
+hduVector3Dd operator/(const hduVector3Dd lhs, const HDdouble& rhs);
+hduVector3Dd operator/(const hduVector3Dd& lhs, const float& rhs);
+
+//Vector + vector overloads.  Could be defined in class, but will declare here so that we have all numeric operators grouped.
+hduVector3Dd operator+(const hduVector3Dd& lhs, const hduVector3Dd& rhs);
+hduVector3Dd operator-(const hduVector3Dd& lhs, const hduVector3Dd& rhs);

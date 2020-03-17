@@ -2,7 +2,13 @@
 
 /**********************hduVector3Dd member functions*********************************/
 
-//Constructor.
+//Constructors.
+hduVector3Dd::hduVector3Dd() {
+	for (int i = 0; i < 3; ++i) {
+		m_components[i] = 0;
+	}
+}
+
 hduVector3Dd::hduVector3Dd(const HDdouble x, const HDdouble y, const HDdouble z) {
 	m_components[0] = x;
 	m_components[1] = y;
@@ -27,6 +33,14 @@ void hduVector3Dd::set(const HDdouble x, const HDdouble y, const HDdouble z) {
 	m_components[0] = x;
 	m_components[1] = y;
 	m_components[2] = z;
+}
+
+//Print the components to console for debugging.
+void hduVector3Dd::print() const {
+	std::cout << '\n';
+	for (int i = 0; i < 3; ++i) {
+		std::cout << m_components[i] << '\n';
+	}
 }
 
 /*****************Hardware subsitutions (tracking position / veloc / accel etc)*************************/
@@ -103,7 +117,7 @@ void Tracker::trackState() {
 	QueryPerformanceCounter(&m_ticks);
 
 	//Can escape this loop by calling Tracker::stop() which sets *m_runTracker to false.
-	while (true) {//*m_runTracker) {
+	while (true) {
 		//TODO: Implement filtering.
 		//At the beginning of the iteration we get the new mouse pos.  We then compare to the current member values and divide by
 		//delta t to find the velocity.  We then compare the new / old values of velocity, and differentiate to find the new acceleration values.
@@ -166,8 +180,11 @@ void Tracker::trackState() {
 
 		m_pos[mapX] = p.x;
 		m_pos[mapY] = p.y;
+
+		//We modify the cursor position by the acceleration * dt^2/2.
 		
-		//A simple way to ensure window is large enough for relatively stable state data, as opposed to having nanosecond callback periods.
+		//A simple way to ensure window is large enough for relatively stable state data.  Alternatively can implement some
+		//moving avergage / etc filters.
 		Sleep(30);
 	}
 }
@@ -176,11 +193,11 @@ void Tracker::trackState() {
 
 /********************************Non-member utility functions***************************/
 //TODO: Verify that [] overloads are working as intended.
-HDdouble dotProduct(const hduVector3Dd a, const hduVector3Dd b) {
+HDdouble dotProduct(const hduVector3Dd& a, const hduVector3Dd& b) {
 	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-hduVector3Dd crossProduct(const hduVector3Dd a, const hduVector3Dd b) {
+hduVector3Dd crossProduct(const hduVector3Dd& a, const hduVector3Dd& b) {
 	return hduVector3Dd(a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]);
 }
 
@@ -228,8 +245,13 @@ void printState() {
 		//Clear the console.
 		system("cls");
 
+		//Check if the user wants to quit the application (press q).
 		//Check if the user wants to change planes, using the arrow keys.
-		if (GetKeyState(VK_LEFT) & 0x8000) {
+		if (GetKeyState('Q') & 0x8000) {
+			return;
+		}
+		//Check if the user wants to change planes, using the arrow keys.
+		else if (GetKeyState(VK_LEFT) & 0x8000) {
 			globalTracker.m_plane = (++globalTracker.m_plane) % 3;
 
 			//Sleep for sometime to prevent repeated changes from user holding key too long.
@@ -261,11 +283,93 @@ void printState() {
 			std::cout << "Plane: Incorrect value - " << globalTracker.m_plane << "\n\n";
 		}
 
-		//We limit the decimal places to make the code more readable.  We do everything on seperate lines to avoid problems with tab spacing as numbers change text length / gain negative signs etc.
+		//We do everything on seperate lines to avoid problems with tab spacing as numbers change text length / gain negative signs etc.
 		std::cout << "Position:\nx: " << globalTracker.m_pos[0] << "\ny: " << globalTracker.m_pos[1] << "\nz: " << globalTracker.m_pos[2] << "\n\n";
 		std::cout << "Velocity:\nx: " << globalTracker.m_vel[0] << "\ny: " << globalTracker.m_vel[1] << "\nz: " << globalTracker.m_vel[2] << "\n\n";
 		std::cout << "Acceleration:\nx: " << globalTracker.m_acc[0] << "\ny: " << globalTracker.m_acc[1] << "\nz: " << globalTracker.m_acc[2] << "\n\n";
 		std::cout << "Force:\nx: " << globalTracker.m_force[0] << "\ny: " << globalTracker.m_force[1] << "\nz: " << globalTracker.m_force[2] << "\n\n";
 		Sleep(50);
 	}
+}
+
+/************************Operator overloads******************************************/
+
+//We define outside of class so that we can have bidirectional arguments.
+//For example, if we overloaded the member operators we could only have the class on the lhs, and argument on the rhs.
+
+//Scalar + vector overloads.  Define for common types of numeric scalars.  Define in both directions.
+
+hduVector3Dd operator+(const hduVector3Dd& lhs, const int& rhs) {
+	return hduVector3Dd(lhs[0] + static_cast<double>(rhs), lhs[1] + static_cast<double>(rhs), lhs[2] + static_cast<double>(rhs));
+}
+hduVector3Dd operator+(const int& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(rhs[0]+ static_cast<double>(lhs), rhs[1] + static_cast<double>(lhs), rhs[2] + static_cast<double>(lhs));
+}
+hduVector3Dd operator+(const hduVector3Dd& lhs, const HDdouble& rhs) {
+	return hduVector3Dd(lhs[0] + rhs, lhs[1] + rhs, lhs[2] + rhs);
+}
+hduVector3Dd operator+(const HDdouble& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(rhs[0] + lhs, rhs[1] + lhs, rhs[2] + lhs);
+}
+hduVector3Dd operator+(const hduVector3Dd& lhs, const float& rhs) {
+	return hduVector3Dd(lhs[0] + static_cast<double>(rhs), lhs[1] + static_cast<double>(rhs), lhs[2] - static_cast<double>(rhs));
+}
+hduVector3Dd operator+(const float& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(rhs[0] + static_cast<double>(lhs), rhs[1] + static_cast<double>(lhs), rhs[2] - static_cast<double>(lhs));
+}
+
+hduVector3Dd operator-(const hduVector3Dd& lhs, const int& rhs) {
+	return hduVector3Dd(lhs[0] - static_cast<double>(rhs), lhs[1] - static_cast<double>(rhs), lhs[2] - static_cast<double>(rhs));
+}
+hduVector3Dd operator-(const int& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(rhs[0] - static_cast<double>(lhs), rhs[1] - static_cast<double>(lhs), rhs[2] - static_cast<double>(lhs));
+}
+hduVector3Dd operator-(const hduVector3Dd& lhs, const HDdouble& rhs) {
+	return hduVector3Dd(lhs[0] - rhs, lhs[1] - rhs, lhs[2] - rhs);
+}
+hduVector3Dd operator-(const HDdouble& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(rhs[0] - lhs, rhs[1] - lhs, rhs[2] - lhs);
+}
+hduVector3Dd operator-(const hduVector3Dd& lhs, const float& rhs) {
+	return hduVector3Dd(lhs[0] - static_cast<double>(rhs), lhs[1] - static_cast<double>(rhs), lhs[2] - static_cast<double>(rhs));
+}
+hduVector3Dd operator-(const float& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(rhs[0] - static_cast<double>(lhs), rhs[1] - static_cast<double>(lhs), rhs[2] - static_cast<double>(lhs));
+}
+
+hduVector3Dd operator*(const hduVector3Dd& lhs, const int& rhs) {
+	return hduVector3Dd(lhs[0] * static_cast<double>(rhs), lhs[1] * static_cast<double>(rhs), lhs[2] * static_cast<double>(rhs));
+}
+hduVector3Dd operator*(const int& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(rhs[0] * static_cast<double>(lhs), rhs[1] * static_cast<double>(lhs), rhs[2] * static_cast<double>(lhs));
+}
+hduVector3Dd operator*(const hduVector3Dd& lhs, const HDdouble& rhs) {
+	return hduVector3Dd(lhs[0] * rhs, lhs[1] * rhs, lhs[2] * rhs);
+}
+hduVector3Dd operator*(const HDdouble& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(rhs[0] * lhs, rhs[1] * lhs, rhs[2] * lhs);
+}
+hduVector3Dd operator*(const hduVector3Dd& lhs, const float& rhs) {
+	return hduVector3Dd(lhs[0] * static_cast<double>(rhs), lhs[1] * static_cast<double>(rhs), lhs[2] * static_cast<double>(rhs));
+}
+hduVector3Dd operator*(const float& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(rhs[0] * static_cast<double>(lhs), rhs[1] * static_cast<double>(lhs), rhs[2] * static_cast<double>(lhs));
+}
+
+hduVector3Dd operator/(const hduVector3Dd& lhs, const int& rhs) {
+	return hduVector3Dd(lhs[0] / static_cast<double>(rhs), lhs[1] / static_cast<double>(rhs), lhs[2] / static_cast<double>(rhs));
+}
+hduVector3Dd operator/(const hduVector3Dd lhs, const HDdouble& rhs) {
+	return hduVector3Dd(lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs);
+}
+hduVector3Dd operator/(const hduVector3Dd& lhs, const float& rhs) {
+	return hduVector3Dd(lhs[0] / static_cast<double>(rhs), lhs[1] / static_cast<double>(rhs), lhs[2] / static_cast<double>(rhs));
+}
+
+//Vector + vector overloads.  Could be defined in class, but will declare here so that we have all numeric operators grouped.
+hduVector3Dd operator+(const hduVector3Dd& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2]);
+}
+hduVector3Dd operator-(const hduVector3Dd& lhs, const hduVector3Dd& rhs) {
+	return hduVector3Dd(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2]);
 }
