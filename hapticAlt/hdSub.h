@@ -7,6 +7,7 @@
 #include <thread>
 #include <memory>
 #include <iostream>
+#include <iomanip>
 
 #include "math.h"
 #include "time.h"  
@@ -88,8 +89,11 @@ private:
 //We declare a global, accessible instance so that we can preserve the arguments of hdGetDoubleev etc.
 extern Tracker globalTracker;
 
-/************************************Non-member utility functions**************/
+/************************************Non-member HD utility functions**************/
 HDdouble dotProduct(const hduVector3Dd a, const hduVector3Dd b);
 hduVector3Dd crossProduct(const hduVector3Dd a, const hduVector3Dd b);
 void hdGetDoublev(const int key, hduVector3Dd& v);
 void hdSetDoublev(const int key, hduVector3Dd& v);
+
+/**********************************Generic utility functions**************************/
+void printState();
