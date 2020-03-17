@@ -67,12 +67,13 @@ public:
 
 	//State data storage.  Would normally want member functions to safely access these, but end user will not be interacting with 
 	//the tracker object so this is not a big deal.
-	HDdouble m_pos[3];
-	HDdouble m_vel[3];
-	int m_acc[3];
+	double m_pos[3];
+	double m_vel[3];
+	double m_acc[3];
+
 private:
 	//Track the time for differentiation.
-	clock_t m_time;
+	LARGE_INTEGER m_ticks;
 
 	//What plane we are working in.
 	int m_plane;
@@ -80,6 +81,9 @@ private:
 	//Callback function for running in external thread.
 	void trackState();
 };
+
+//We declare a global, accessible instance so that we can preserve the arguments of hdGetDoubleev etc.
+extern Tracker globalTracker;
 
 /************************************Non-member utility functions**************/
 HDdouble dotProduct(const hduVector3Dd a, const hduVector3Dd b);

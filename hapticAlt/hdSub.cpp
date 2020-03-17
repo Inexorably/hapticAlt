@@ -98,6 +98,9 @@ void Tracker::start() {
 
 //Callback function for running in external thread.
 void Tracker::trackState() {
+	//Check the start time for the first loop iteration.
+	QueryPerformanceCounter(&m_ticks);
+
 	//Can escape this loop by calling Tracker::stop() which sets *m_runTracker to false.
 	while (true) {//*m_runTracker) {
 		//TODO: Implement filtering.
@@ -134,21 +137,33 @@ void Tracker::trackState() {
 			std::cout << "Tracker::trackState() - m_plane set to incorrect value " << m_plane << std::endl;
 		}
 
-		//We need to know delta t for differentiation, in seconds.  We cast before - operator to avoid overflow.
-		HDdouble deltaTime = static_cast<HDdouble>((clock() - m_time)) / CLOCKS_PER_SEC;
+		//We need to know delta t for differentiation.  https://stackoverflow.com/questions/14337278/precise-time-measurement
+		LARGE_INTEGER frequency;        // ticks per second
+		LARGE_INTEGER current_ticks;           // ticks
+		double dt;
+		// get ticks per second
+		QueryPerformanceFrequency(&frequency);
+		QueryPerformanceCounter(&current_ticks);
+		dt = (current_ticks.QuadPart - m_ticks.QuadPart) * 1.0 / frequency.QuadPart;
+		m_ticks = current_ticks;
 
 		//Handle veloc, accel before overwriting the current m_pos values.
-		HDdouble vx = (p.x - m_pos[mapX]) / deltaTime;
-		HDdouble vy = (p.y - m_pos[mapY]) / deltaTime;
+		//TODO: Consider filtering.  Acceleration in particular is quite unstable.
+		//Distance units are pixels (px).  Time units seconds.
+		double vx = (p.x - m_pos[mapX]) / dt;
+		double vy = (p.y - m_pos[mapY]) / dt;
 
-		m_acc[mapX] = (vx - m_vel[mapX]) / deltaTime;
-		m_acc[mapY] = (vy - m_vel[mapY]) / deltaTime;
+		m_acc[mapX] = (vx - m_vel[mapX]) / dt;
+		m_acc[mapY] = (vy - m_vel[mapY]) / dt;
 
 		m_vel[mapX] = vx;
 		m_vel[mapY] = vy;
 
 		m_pos[mapX] = p.x;
 		m_pos[mapY] = p.y;
+		
+		//A simple way to ensure window is large enough for relatively stable state data, as opposed to having nanosecond callback periods.
+		Sleep(30);
 	}
 }
 
@@ -164,11 +179,28 @@ hduVector3Dd crossProduct(const hduVector3Dd a, const hduVector3Dd b) {
 	return hduVector3Dd(a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]);
 }
 
+//In the header file, we declare globalTracker with extern.
+//We now define it so it is globally accessible for maintaining hdGetDoublev syntax.
+Tracker globalTracker;
 
+//Get the vector requested by the key.
 void hdGetDoublev(const int key, hduVector3Dd& v) {
-
+	switch (key) {
+	case HD_CURRENT_POSITION:
+		v.set(globalTracker.m_pos[0], globalTracker.m_pos[1], globalTracker.m_pos[2]);
+		break;
+	case HD_CURRENT_VELOCITY:
+		v.set(globalTracker.m_vel[0], globalTracker.m_vel[1], globalTracker.m_vel[2]);
+		break;
+	case HD_CURRENT_ACCELERATION:
+		v.set(globalTracker.m_acc[0], globalTracker.m_acc[1], globalTracker.m_acc[2]);
+		break;
+	default:
+		std::cout << "hdGetDoublev() - Unexpected fallthrough.\n";
+	}
 }
 
+//We maintain the same syntax here for the sake of compilation, but we do not have the hardware to implement this function in a standard manner.
 void hdSetDoublev(const int key, hduVector3Dd& v) {
 
 }
