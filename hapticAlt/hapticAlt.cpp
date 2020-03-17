@@ -63,6 +63,31 @@ void hapticCallback() {
 
 		//////////////////////////////////////////////////////////////////////////////////
 		//*** STOP EDITING HERE ***//////////////////////////////////////////////////////
+
+		//We apply some "force" to the mouse, where we do A*dt^2/2 for distance change in x y z.
+
+		//Check our elapsed time for force integration.
+		LARGE_INTEGER frequency;				// ticks per second
+		static LARGE_INTEGER prev_ticks;		// ticks in the last iteration.
+		LARGE_INTEGER current_ticks;            // ticks in this iteration.
+		double dt;
+
+		// get ticks per second
+		QueryPerformanceFrequency(&frequency);
+		QueryPerformanceCounter(&current_ticks);
+		dt = (current_ticks.QuadPart - prev_ticks.QuadPart) * 1.0 / frequency.QuadPart;
+		prev_ticks = current_ticks;
+
+		//Apply the force based on dt to the cursor.
+		POINT point;
+		if (!GetCursorPos(&point)) {
+			std::cout << "hapticCallback: Could not get mouse coordinates\n";
+		}
+
+		TODO leaving off here.
+
+		//Sleep for increased window for smoother integration.
+		Sleep(10);
 	}
 }
 
