@@ -78,6 +78,7 @@ Tracker::Tracker() {
 		m_pos[i] = 0;
 		m_vel[i] = 0;
 		m_acc[i] = 0;
+		m_force[i] = 0;
 	}
 
 	m_pos[mapX] = p.x;
@@ -113,7 +114,7 @@ void Tracker::trackState() {
 			std::cout << "Tracker::trackState() - GetCursorPos() call failed.\n";
 		}
 
-		//We check which plane we are in and map screen x y to the appropriate indexes.
+		//We check which plane we are in and map screen x y to the appropriate indexes, in order to avoid too much duplicate code in the switch.
 		int mapX = -1;
 		int mapY = -1;
 
@@ -121,16 +122,20 @@ void Tracker::trackState() {
 		case XY:
 			mapX = 0;
 			mapY = 1;
+			m_vel[2] = 0;
+			m_acc[2] = 0;
 			break;
 		case XZ:
 			mapX = 0;
 			mapY = 2;
-
+			m_vel[1] = 0;
+			m_acc[1] = 0;
 			break;
 		case ZY:
 			mapX = 2;
 			mapY = 1;
-
+			m_vel[0] = 0;
+			m_acc[0] = 0;
 			break;
 		default:
 			//Catch error fallthroughs.
@@ -196,11 +201,20 @@ void hdGetDoublev(const int key, hduVector3Dd& v) {
 		v.set(globalTracker.m_acc[0], globalTracker.m_acc[1], globalTracker.m_acc[2]);
 		break;
 	default:
-		std::cout << "hdGetDoublev() - Unexpected fallthrough.\n";
+		std::cout << "hdGetDoublev() - Unexpected fallthrough with key " << key << '\n';
 	}
 }
 
 //We maintain the same syntax here for the sake of compilation, but we do not have the hardware to implement this function in a standard manner.
+//We instead update the force values in the globalTracker variable so that we can display them in console.
 void hdSetDoublev(const int key, hduVector3Dd& v) {
-
+	switch (key) {
+	case HD_CURRENT_FORCE:
+		for (int i = 0; i < 3; ++i) {
+			globalTracker.m_force[i] = v[i];
+		}
+		break;
+	default:
+		std::cout << "hdSetDoublev() - Unexpected fallthrough with key " << key << '\n';
+	}
 }

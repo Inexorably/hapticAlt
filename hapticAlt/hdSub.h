@@ -71,12 +71,15 @@ public:
 	double m_vel[3];
 	double m_acc[3];
 
+	//Store the haptic output force for display.
+	double m_force[3];
+	
+	//What plane we are working in.
+	int m_plane;
+
 private:
 	//Track the time for differentiation.
 	LARGE_INTEGER m_ticks;
-
-	//What plane we are working in.
-	int m_plane;
 
 	//Callback function for running in external thread.
 	void trackState();
