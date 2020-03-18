@@ -23,7 +23,7 @@ void hapticCallback() {
 		HDdouble k = 600;
 
 		//Define the damping coefficient in N-sec/mm.
-		HDdouble b = 3;
+		HDdouble b = 100;
 
 		/* Implement the algorithm covered in class
 		to create a frictionless oriented 3D plane with an offset, as defined by a point on the plane and the normal to the plane.
@@ -48,7 +48,7 @@ void hapticCallback() {
 
 		//If d is negative, the user is on or in the wall.  If d is positive, the user is outside of the wall.
 		if (d <= 0) {
-			if (int(abs(position[0])) % 90 > 40){
+			if (int(abs(position[0])) % 300 > 150){
 
 				f.set(-1 * velocity[0] * b, 0, 0);
 					//std::cout << f[0] << ", " << f[1] << ", " << f[2] << "   V :" << velocity.magnitude() << std::endl;
