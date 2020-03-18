@@ -253,7 +253,6 @@ void printState() {
 		//Check if the user wants to change planes, using the arrow keys.
 		else if (GetKeyState(VK_LEFT) & 0x8000) {
 			globalTracker.m_plane = (++globalTracker.m_plane) % 3;
-
 			//Sleep for sometime to prevent repeated changes from user holding key too long.
 			Sleep(300);
 		}
@@ -263,7 +262,12 @@ void printState() {
 			if (globalTracker.m_plane < 0) {
 				globalTracker.m_plane = 2;
 			}
-
+			//Sleep for sometime to prevent repeated changes from user holding key too long.
+			Sleep(300);
+		}
+		//Check if the user is wants to toggle the pseudo haptic feedback.
+		else if (GetKeyState('T') & 0x8000) {
+			globalTracker.m_enablePseudoHaptics = !globalTracker.m_enablePseudoHaptics;
 			//Sleep for sometime to prevent repeated changes from user holding key too long.
 			Sleep(300);
 		}
@@ -288,6 +292,12 @@ void printState() {
 		std::cout << "Velocity:\nx: " << globalTracker.m_vel[0] << "\ny: " << globalTracker.m_vel[1] << "\nz: " << globalTracker.m_vel[2] << "\n\n";
 		std::cout << "Acceleration:\nx: " << globalTracker.m_acc[0] << "\ny: " << globalTracker.m_acc[1] << "\nz: " << globalTracker.m_acc[2] << "\n\n";
 		std::cout << "Force:\nx: " << globalTracker.m_force[0] << "\ny: " << globalTracker.m_force[1] << "\nz: " << globalTracker.m_force[2] << "\n\n";
+
+		//We print the stationary force -- the minimum force required to move the mouse / hip.  Please see the definiton of m_stationaryForce in hdSub.h for further explanation.
+		std::cout << "Psuedo haptic mouse feedback: " << globalTracker.m_enablePseudoHaptics << "\n\n";
+
+		//Print the controls.
+		std::cout << "Controls:\nChange planes: left / right arrow keys\nToggle pseudo haptic mouse feedback: T\nQuit: Q\n";
 		Sleep(50);
 	}
 }

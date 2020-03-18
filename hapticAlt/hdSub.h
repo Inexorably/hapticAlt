@@ -78,6 +78,9 @@ public:
 	//What plane we are working in.
 	int m_plane;
 
+	//Enable or disable psuedo haptic feedback applied to the mouse.
+	bool m_enablePseudoHaptics = true;
+
 private:
 	//Track the time for differentiation.
 	LARGE_INTEGER m_ticks;

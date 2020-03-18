@@ -20,10 +20,10 @@ void hapticCallback() {
 
 		//We use the same stiffness k for all examples below.  In the lab, we will have different cpps for each example, so we will have to redefine it in each.
 		//Note that k will be wrt the internal distance units / force units.
-		HDdouble k = 0.20;
+		HDdouble k = 600;
 
 		//Define the damping coefficient in N-sec/mm.
-		HDdouble b = 0.00917;
+		HDdouble b = 3;
 
 		/* Implement the algorithm covered in class
 		to create a frictionless oriented 3D plane with an offset, as defined by a point on the plane and the normal to the plane.
@@ -65,6 +65,10 @@ void hapticCallback() {
 		//*** STOP EDITING HERE ***//////////////////////////////////////////////////////
 
 		//We apply some "force" to the mouse, where we do A*dt^2/2 for distance change in x y z.
+		//Note that we treat the "force" as an acceleration -- we do not take into account mass as we just have a mouse for ux.
+
+		//If the force's magnitude that we would apply to the mouse is less than globalTracker.m_stationaryForce, we apply no values.
+		//Please see the declaration of globalTracker.m_stationaryForce in hdSub.h for further explanation of this variable.
 
 		//Check our elapsed time for force integration.
 		LARGE_INTEGER frequency;				// ticks per second
@@ -79,12 +83,48 @@ void hapticCallback() {
 		prev_ticks = current_ticks;
 
 		//Apply the force based on dt to the cursor.
+		//Get the current cursor position.
 		POINT point;
 		if (!GetCursorPos(&point)) {
 			std::cout << "hapticCallback: Could not get mouse coordinates\n";
 		}
 
-		TODO leaving off here.
+		//Modify the cursor position per the output force f.
+		//This is dependant on what plane we are operating in.
+		//We check which plane we are in and map screen x y to the appropriate indexes.
+		int mapX = -1;
+		int mapY = -1;
+		switch (globalTracker.m_plane) {
+		case XY:
+			mapX = 0;
+			mapY = 1;
+			break;
+		case XZ:
+			mapX = 0;
+			mapY = 2;
+
+			break;
+		case ZY:
+			mapX = 2;
+			mapY = 1;
+
+			break;
+		default:
+			//Catch error fallthroughs.
+			std::cout << "hapticCallback() - globalTracker.m_plane set to incorrect value " << globalTracker.m_plane << std::endl;
+			return;
+		}
+
+		//Integrate the forces (again, treating as acceleration due to no mass info about hip), and find where our new point should be.
+		//We are working in px, so we round to the nearest integer.
+		point.x += std::round(f[mapX] * pow(dt, 2) / 2);
+		point.y += std::round(f[mapY] * pow(dt, 2) / 2);
+
+		//Set the cursor position.
+		if (globalTracker.m_enablePseudoHaptics && !SetCursorPos(point.x, point.y)) {
+			std::cout << "hapticCallback() - Unable to SetCursorPos\n";
+		}
+		
 
 		//Sleep for increased window for smoother integration.
 		Sleep(10);
