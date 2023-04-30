@@ -1,5 +1,7 @@
 # About
 
+This was written in 2020 in response to the COVID19 pandemic making my haptics robotics course going virtual.
+
 hapticAlt acts as a dummy api for source code intended for the OpenHaptics platform / Phantom Omni haptic device.  This repo allows the user to define their own haptic rendering in the "hapticCallback()" function of hapticAlt.cpp.  The mouse position is tracked in the 2d plane of the screen (0,0 defined in top left corner, increasing right and down), and the velocity / acceleration are found through backwards differentiation (if used, some moving average or other filter can be implemented for smoothing).
 
 This repo was intentionaly kept as simple as possible with no external libraries and as few source files as possible to avoid installation problems for users unfamiliar with C++.
